@@ -192,7 +192,7 @@ def demo_func(x):
 
 from sko.PSO import PSO
 
-pso = PSO(func=demo_func, dim=3, pop=40, max_iter=150, lb=[0, -1, 0.5], ub=[1, 1, 1])
+pso = PSO(func=demo_func, dim=3, pop=40, max_iter=150, lb=[0, -1, 0.5], ub=[1, 1, 1], w=0.8, c1=0.5, c2=0.5)
 pso.run()
 print('best_x is ', pso.gbest_x, 'best_y is', pso.gbest_y)
 
@@ -208,7 +208,7 @@ plt.show()
 
 
 ![pso_ani](https://github.com/guofei9987/pictures_for_blog/blob/master/heuristic_algorithm/pso.gif?raw=true)  
-↑**see [examples/demo_pso.py](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_pso_ani.py)**
+↑**see [examples/demo_pso_ani.py](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_pso_ani.py)**
 
 ### 2.2 PSO without constraint
 -> Demo code: [examples/demo_pso.py#s2](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_pso.py#L17)
@@ -225,17 +225,19 @@ print('best_x is ', pso.gbest_x, 'best_y is', pso.gbest_y)
 from sko.SA import SA
 
 demo_func = lambda x: x[0] ** 2 + (x[1] - 0.05) ** 2 + x[2] ** 2
-sa = SA(func=demo_func, x0=[1, 1, 1])
+sa = SA(func=demo_func, x0=[1, 1, 1], T_max=100, T_min=1e-5)
 x_star, y_star = sa.run()
 print(x_star, y_star)
 
 ```
+
+Plot the result  
 -> Demo code: [examples/demo_sa.py#s2](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_sa.py#L8)
 ```python
 import matplotlib.pyplot as plt
 import pandas as pd
 
-plt.plot(pd.DataFrame(sa.f_list).cummin(axis=0))
+plt.plot(pd.DataFrame(sa.best_y_history).cummin(axis=0))
 plt.show()
 ```
 ![sa](https://github.com/guofei9987/pictures_for_blog/blob/master/heuristic_algorithm/sa.png?raw=true)
@@ -244,39 +246,45 @@ plt.show()
 Firstly, prepare your data (the distance matrix). See GA_TSP.  
 
 DO SA for TSP  
--> Demo code: [examples/demo_sa_tsp.py#s2](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_sa_tsp.py#L19)
+-> Demo code: [examples/demo_sa_tsp.py#s2](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_sa_tsp.py#L20)
 ```python
 from sko.SA import SA_TSP
 
-sa_tsp = SA_TSP(func=cal_total_distance, x0=range(num_points))
+sa_tsp = SA_TSP(func=cal_total_distance, x0=range(num_points), T_max=100, T_min=1, L=10 * num_points)
 
-best_points, best_distance = sa_tsp.fit()
+best_points, best_distance = sa_tsp.run()
 print(best_points, best_distance, cal_total_distance(best_points))
 ```
 
 plot the result  
--> Demo code: [examples/demo_sa_tsp.py#s2](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_sa_tsp.py#L19)
+-> Demo code: [examples/demo_sa_tsp.py#s3](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_sa_tsp.py#L27)
 ```python
-from sko.SA import SA_TSP
+from matplotlib.ticker import FormatStrFormatter
 
-sa_tsp = SA_TSP(func=cal_total_distance, x0=range(num_points))
+fig, ax = plt.subplots(1, 2)
 
-best_points, best_distance = sa_tsp.fit()
-print(best_points, best_distance, cal_total_distance(best_points))
+best_points_ = np.concatenate([best_points, [best_points[0]]])
+best_points_coordinate = points_coordinate[best_points_, :]
+ax[0].plot(sa_tsp.best_y_history)
+ax[0].set_xlabel("Distance")
+ax[0].set_ylabel("Iteration")
+ax[1].plot(best_points_coordinate[:, 0], best_points_coordinate[:, 1],
+           marker='o', markerfacecolor='b', color='c', linestyle='-')
+ax[1].xaxis.set_major_formatter(FormatStrFormatter('%.3f'))
+ax[1].yaxis.set_major_formatter(FormatStrFormatter('%.3f'))
+ax[1].set_xlabel("Longitude")
+ax[1].set_ylabel("Latitude")
+plt.show()
+
 ```
 ![sa](https://github.com/guofei9987/pictures_for_blog/blob/master/heuristic_algorithm/sa_tsp.png?raw=true)
 
-### 3.2 SA for real function optimization
--> Demo code: [examples/demo_sa.py#s1](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_sa.py#L1)
-```python
-from sko.SA import SA
 
-demo_func = lambda x: x[0] ** 2 + (x[1] - 0.05) ** 2 + x[2] ** 2
-sa = SA(func=demo_func, x0=[1, 1, 1])
-x_star, y_star = sa.run()
-print(x_star, y_star)
+Plot the animation:  
 
-```
+![sa](https://github.com/guofei9987/pictures_for_blog/blob/master/heuristic_algorithm/sa_tsp1.gif?raw=true)  
+↑**see [examples/demo_sa_tsp.py](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_sa_tsp.py)**
+
 
 
 

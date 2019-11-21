@@ -179,7 +179,7 @@ def demo_func(x):
 
 from sko.PSO import PSO
 
-pso = PSO(func=demo_func, dim=3, lb=[0, -1, 0.5], ub=[1, 1, 1])
+pso = PSO(func=demo_func, dim=3, pop=40, max_iter=150, lb=[0, -1, 0.5], ub=[1, 1, 1], w=0.8, c1=0.5, c2=0.5)
 pso.run()
 print('best_x is ', pso.gbest_x, 'best_y is', pso.gbest_y)
 
@@ -214,7 +214,7 @@ print('best_x is ', pso.gbest_x, 'best_y is', pso.gbest_y)
 from sko.SA import SA
 
 demo_func = lambda x: x[0] ** 2 + (x[1] - 0.05) ** 2 + x[2] ** 2
-sa = SA(func=demo_func, x0=[1, 1, 1])
+sa = SA(func=demo_func, x0=[1, 1, 1], T_max=100, T_min=1e-5)
 x_star, y_star = sa.run()
 print(x_star, y_star)
 
@@ -224,7 +224,7 @@ print(x_star, y_star)
 import matplotlib.pyplot as plt
 import pandas as pd
 
-plt.plot(pd.DataFrame(sa.f_list).cummin(axis=0))
+plt.plot(pd.DataFrame(sa.best_y_history).cummin(axis=0))
 plt.show()
 ```
 ![sa](https://github.com/guofei9987/pictures_for_blog/blob/master/heuristic_algorithm/sa.png?raw=true)
@@ -235,31 +235,32 @@ plt.show()
 作为demo，生成模拟数据（代码与遗传算法解决TSP问题一样，这里省略）
 
 调用模拟退火算法  
--> Demo code: [examples/demo_sa_tsp.py#s2](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_sa_tsp.py#L19)
+-> Demo code: [examples/demo_sa_tsp.py#s2](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_sa_tsp.py#L20)
 ```python
 from sko.SA import SA_TSP
 
-sa_tsp = SA_TSP(func=cal_total_distance, x0=range(num_points))
+sa_tsp = SA_TSP(func=cal_total_distance, x0=range(num_points), T_max=100, T_min=1, L=10 * num_points)
 
-best_points, best_distance = sa_tsp.fit()
+best_points, best_distance = sa_tsp.run()
 print(best_points, best_distance, cal_total_distance(best_points))
 ```
 
 
 画出结果
--> Demo code: [examples/demo_sa_tsp.py#s2](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_sa_tsp.py#L19)
+-> Demo code: [examples/demo_sa_tsp.py#s2](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_sa_tsp.py#L20)
 ```python
 from sko.SA import SA_TSP
 
-sa_tsp = SA_TSP(func=cal_total_distance, x0=range(num_points))
+sa_tsp = SA_TSP(func=cal_total_distance, x0=range(num_points), T_max=100, T_min=1, L=10 * num_points)
 
-best_points, best_distance = sa_tsp.fit()
+best_points, best_distance = sa_tsp.run()
 print(best_points, best_distance, cal_total_distance(best_points))
 ```
 ![sa](https://github.com/guofei9987/pictures_for_blog/blob/master/heuristic_algorithm/sa_tsp.png?raw=true)
 
 
-
+![sa](https://github.com/guofei9987/pictures_for_blog/blob/master/heuristic_algorithm/sa_tsp1.gif?raw=true)  
+↑**参考代码 [examples/demo_sa_tsp.py](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_sa_tsp.py)**
 
 ## 4. 蚁群算法
 蚁群算法(ACA, Ant Colony Algorithm)解决TSP问题
@@ -298,7 +299,8 @@ print('best routine:', best_points, 'best_distance:', best_distance)
 ![IA](https://github.com/guofei9987/pictures_for_blog/blob/master/heuristic_algorithm/ia2.png?raw=true)
 
 
-## 6. 人工鱼群算法(artificial fish swarm algorithm, AFSA)
+## 6. 人工鱼群算法
+人工鱼群算法(artificial fish swarm algorithm, AFSA)
 
 -> Demo code: [examples/demo_asfs.py#s1](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_asfs.py#L1)
 ```python
@@ -316,16 +318,3 @@ best_x, best_y = asfa.fit()
 print(best_x, best_y)
 ```
 
-# Q&A
-## 如何进行整数规划
-
-在多维优化时，想让哪个变量限制为整数，就设定 `precision` 为 1即可。  
-例如，我想让我的自定义函数 `demo_func` 的第一个变量限制为整数，那么久设定 `precision` 的第一个数为1，例子如下：
-```python
-from sko.GA import GA
-
-demo_func = lambda x: x[0] ** 2 + (x[1] - 0.05) ** 2 + x[2] ** 2
-ga = GA(func=demo_func, n_dim=3, max_iter=500, lb=[0, 0, 0], ub=[1, 1, 1], precision=[1, 1e-7, 1e-7])
-best_x, best_y = ga.run()
-print('best_x:', best_x, '\n', 'best_y:', best_y)
-```
