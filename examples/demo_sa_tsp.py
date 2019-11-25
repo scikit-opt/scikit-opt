@@ -6,7 +6,8 @@ import sys
 file_name = sys.argv[1] if len(sys.argv) > 1 else 'data/nctu.csv'
 points_coordinate = np.loadtxt(file_name, delimiter=',')
 num_points = points_coordinate.shape[0]
-distance_matrix = spatial.distance.cdist(points_coordinate, points_coordinate, metric='euclidean') * 111000
+distance_matrix = spatial.distance.cdist(points_coordinate, points_coordinate, metric='euclidean')
+distance_matrix = distance_matrix * 111000  # 1 degree of lat/lon ~ = 111000m
 
 
 def cal_total_distance(routine):
@@ -50,8 +51,12 @@ best_x_history = sa_tsp.best_x_history
 
 fig2, ax2 = plt.subplots(1, 1)
 ax2.set_title('title', loc='center')
-line = ax2.plot(points_coordinate[:,0], points_coordinate[:,1], marker='o', markerfacecolor='b', color='c', linestyle='-')
-
+line = ax2.plot(points_coordinate[:, 0], points_coordinate[:, 1],
+                marker='o', markerfacecolor='b', color='c', linestyle='-')
+ax2.xaxis.set_major_formatter(FormatStrFormatter('%.3f'))
+ax2.yaxis.set_major_formatter(FormatStrFormatter('%.3f'))
+ax2.set_xlabel("Longitude")
+ax2.set_ylabel("Latitude")
 plt.ion()
 p = plt.show()
 
@@ -69,4 +74,3 @@ ani = FuncAnimation(fig2, update_scatter, blit=True, interval=25, frames=len(bes
 plt.show()
 
 ani.save('sa_tsp.gif', writer='pillow')
-

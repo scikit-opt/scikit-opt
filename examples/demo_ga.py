@@ -1,5 +1,4 @@
 import numpy as np
-from sko.GA import GA
 
 
 def schaffer(p):
@@ -11,6 +10,9 @@ def schaffer(p):
     x = np.square(x1) + np.square(x2)
     return 0.5 + (np.sin(x) - 0.5) / np.square(1 + 0.001 * x)
 
+
+# %%
+from sko.GA import GA
 
 ga = GA(func=schaffer, n_dim=2, size_pop=50, max_iter=800, lb=[-1, -1], ub=[1, 1], precision=1e-7)
 best_x, best_y = ga.run()
