@@ -21,7 +21,7 @@
 # [scikit-opt](https://github.com/guofei9987/scikit-opt)
 
 [![PyPI](https://img.shields.io/pypi/v/scikit-opt)](https://pypi.org/project/scikit-opt/)
-[![release](https://img.shields.io/github/v/release/guofei9987/scikit-opt)](https://github.com/guofei9987/scikit-opt)
+[![release](https://img.shields.io/github/v/release/guofei9987/scikit-opt)](https://github.com/guofei9987/scikit-opt/releases/)
 [![Build Status](https://travis-ci.com/guofei9987/scikit-opt.svg?branch=master)](https://travis-ci.com/guofei9987/scikit-opt)
 [![codecov](https://codecov.io/gh/guofei9987/scikit-opt/branch/master/graph/badge.svg)](https://codecov.io/gh/guofei9987/scikit-opt)
 [![PyPI_downloads](https://img.shields.io/pypi/dm/scikit-opt)](https://pypi.org/project/scikit-opt/)
@@ -53,12 +53,11 @@ pip install .
 ```
 
 ## News:
-All algorithms will be available on ~~TensorFlow/Spark~~ **pytorch** on version 0.4, getting parallel performance.  
-DE(Differential Evolution Algorithm) will be complete on version 0.5  
+All algorithms will be available on ~~TensorFlow/Spark~~ **pytorch** on version 1.0.0, getting parallel performance.  
 Have fun!
 
 
-## feature: UDF
+### feature1: UDF
 
 **UDF** (user defined function) is available now!
 
@@ -98,11 +97,11 @@ ga.register(operator_name='selection', operator=selection_tournament, tourn_size
 scikit-opt also provide some operators  
 -> Demo code: [examples/demo_ga_udf.py#s4](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_ga_udf.py#L21)
 ```python
-from sko.GA import ranking_linear, ranking_raw, crossover_2point, selection_roulette_2, mutation
+from sko.operators import ranking, selection, crossover, mutation
 
-ga.register(operator_name='ranking', operator=ranking_linear). \
-    register(operator_name='crossover', operator=crossover_2point). \
-    register(operator_name='mutation', operator=mutation)
+ga.register(operator_name='ranking', operator=ranking.ranking). \
+    register(operator_name='crossover', operator=crossover.crossover_2point). \
+    register(operator_name='mutation', operator=mutation.mutation)
 
 ```
 Now do GA as usual  
@@ -117,10 +116,63 @@ print('best_x:', best_x, '\n', 'best_y:', best_y)
 
 > scikit-opt provide a dozen of operators, see [here](https://github.com/guofei9987/scikit-opt/blob/master/sko/GA.py)
 
+###  feature2: continue to run
+(New in version 0.3.6)  
+Run an algorithm for 10 iterations, and then run another 20 iterations base on the 10 iterations before:
+```python
+from sko.GA import GA
 
+func = lambda x: x[0] ** 2
+ga = GA(func=func, n_dim=1)
+ga.run(10)
+ga.run(20)
+```
 
 # Quick start
-## 1. Genetic Algorithm
+
+## 1. Differential Evolution
+**Step1**：define your problem  
+-> Demo code: [examples/demo_de.py#s1](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_de.py#L1)
+```python
+'''
+min f(x1, x2, x3) = x1^2 + x2^2 + x3^2
+s.t.
+    x1x2 >= 1
+    x1x2 <= 5
+    x2+x3 = 1
+    0 <= x1, x2, x3 <= 5
+'''
+
+
+def obj_func(p):
+    x1, x2, x3 = p
+    return x1 ** 2 + x2 ** 2 + x3 ** 2
+
+
+constraint_eq = [
+    lambda x: 1 - x[1] - x[2]
+]
+
+constraint_ueq = [
+    lambda x: 1 - x[0] * x[1],
+    lambda x: x[0] * x[1] - 5
+]
+
+```
+
+**Step2**: do Differential Evolution  
+-> Demo code: [examples/demo_de.py#s2](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_de.py#L25)
+```python
+from sko.DE import DE
+
+de = DE(func=obj_func, n_dim=3, size_pop=50, max_iter=800, lb=[0, 0, 0], ub=[5, 5, 5],
+        constraint_eq=constraint_eq, constraint_ueq=constraint_ueq)
+
+best_x, best_y = de.run()
+print('best_x:', best_x, '\n', 'best_y:', best_y)
+```
+
+## 2. Genetic Algorithm
 
 **Step1**：define your problem  
 -> Demo code: [examples/demo_ga.py#s1](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_ga.py#L1)
@@ -140,7 +192,7 @@ def schaffer(p):
 
 ```
 
-**Step2**: do GA  
+**Step2**: do Genetic Algorithm  
 -> Demo code: [examples/demo_ga.py#s2](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_ga.py#L14)
 ```python
 from sko.GA import GA
@@ -166,7 +218,7 @@ plt.show()
 
 ![Figure_1-1](https://github.com/guofei9987/pictures_for_blog/blob/master/heuristic_algorithm/ga_1.png?raw=true)
 
-### 1.1 Genetic Algorithm for TSP(Travelling Salesman Problem)
+### 2.2 Genetic Algorithm for TSP(Travelling Salesman Problem)
 Just import the `GA_TSP`, it overloads the `crossover`, `mutation` to solve the TSP
 
 **Step1**: define your problem. Prepare your points coordinate and the distance matrix.  
@@ -177,7 +229,7 @@ import numpy as np
 from scipy import spatial
 import matplotlib.pyplot as plt
 
-num_points = 8
+num_points = 10
 
 points_coordinate = np.random.rand(num_points, 2)  # generate coordinate of points
 distance_matrix = spatial.distance.cdist(points_coordinate, points_coordinate, metric='euclidean')
@@ -199,7 +251,7 @@ def cal_total_distance(routine):
 
 from sko.GA import GA_TSP
 
-ga_tsp = GA_TSP(func=cal_total_distance, n_dim=num_points, size_pop=300, max_iter=800, Pm=0.3)
+ga_tsp = GA_TSP(func=cal_total_distance, n_dim=num_points, size_pop=300, max_iter=800, prob_mut=0.05)
 best_points, best_distance = ga_tsp.run()
 
 ```
@@ -217,9 +269,9 @@ plt.show()
 ![GA_TPS](https://github.com/guofei9987/pictures_for_blog/blob/master/heuristic_algorithm/ga_tsp.png?raw=true)
 
 
-## 2. PSO(Particle swarm optimization)
+## 3. PSO(Particle swarm optimization)
 
-### 2.1 PSO with constraint
+### 3.1 PSO with constraint
 **Step1**: define your problem:  
 -> Demo code: [examples/demo_pso.py#s1](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_pso.py#L1)
 ```python
@@ -258,7 +310,7 @@ plt.show()
 ![pso_ani](https://github.com/guofei9987/pictures_for_blog/blob/master/heuristic_algorithm/pso.gif?raw=true)  
 ↑**see [examples/demo_pso_ani.py](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_pso_ani.py)**
 
-### 2.2 PSO without constraint
+### 3.2 PSO without constraint
 -> Demo code: [examples/demo_pso.py#s4](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_pso.py#L19)
 ```python
 pso = PSO(func=demo_func, dim=3)
@@ -266,8 +318,8 @@ fitness = pso.run()
 print('best_x is ', pso.gbest_x, 'best_y is', pso.gbest_y)
 ```
 
-## 3. SA(Simulated Annealing)
-### 3.1 SA for multiple function
+## 4. SA(Simulated Annealing)
+### 4.1 SA for multiple function
 **Step1**: define your problem  
 -> Demo code: [examples/demo_sa.py#s1](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_sa.py#L1)
 ```python
@@ -299,7 +351,7 @@ plt.show()
 
 
 Moreover, scikit-opt provide 3 types of Simulated Annealing: Fast, Boltzmann, Cauchy. See [more sa](https://scikit-opt.github.io/scikit-opt/#/en/more_sa)
-### 3.2 SA for TSP
+### 4.2 SA for TSP
 **Step1**: oh, yes, define your problems. To boring to copy this step.  
 
 **Step2**: DO SA for TSP  
@@ -345,7 +397,7 @@ More: Plot the animation:
 
 
 
-## 4. ACA (Ant Colony Algorithm) for tsp 
+## 5. ACA (Ant Colony Algorithm) for tsp 
 -> Demo code: [examples/demo_aca_tsp.py#s2](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_aca_tsp.py#L23)
 ```python
 from sko.ACA import ACA_TSP
@@ -361,13 +413,13 @@ best_x, best_y = aca.run()
 ![ACA](https://github.com/guofei9987/pictures_for_blog/blob/master/heuristic_algorithm/aca_tsp.png?raw=true)
 
 
-## 5. immune algorithm (IA)
+## 6. immune algorithm (IA)
 -> Demo code: [examples/demo_ia.py#s2](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_ia.py#L6)
 ```python
 
 from sko.IA import IA_TSP
 
-ia_tsp = IA_TSP(func=cal_total_distance, n_dim=num_points, pop=500, max_iter=2000, Pm=0.2,
+ia_tsp = IA_TSP(func=cal_total_distance, n_dim=num_points, size_pop=500, max_iter=800, prob_mut=0.2,
                 T=0.7, alpha=0.95)
 best_points, best_distance = ia_tsp.run()
 print('best routine:', best_points, 'best_distance:', best_distance)
@@ -376,7 +428,7 @@ print('best routine:', best_points, 'best_distance:', best_distance)
 
 ![IA](https://github.com/guofei9987/pictures_for_blog/blob/master/heuristic_algorithm/ia2.png?raw=true)
 
-## 6. artificial fish swarm algorithm (AFSA)
+## 7. artificial fish swarm algorithm (AFSA)
 -> Demo code: [examples/demo_asfs.py#s1](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_asfs.py#L1)
 ```python
 def func(x):
@@ -389,6 +441,6 @@ from sko.ASFA import ASFA
 asfa = ASFA(func, n_dim=2, size_pop=50, max_iter=300,
             max_try_num=100, step=0.5, visual=0.3,
             q=0.98, delta=0.5)
-best_x, best_y = asfa.fit()
+best_x, best_y = asfa.run()
 print(best_x, best_y)
 ```

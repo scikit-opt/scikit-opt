@@ -70,7 +70,7 @@ class PSO(SkoBase):
     -----------------------------
     >>> demo_func = lambda x: x[0] ** 2 + (x[1] - 0.05) ** 2 + x[2] ** 2
     >>> pso = PSO(func=demo_func, dim=3)
-    >>> gbest_x, gbest_y = pso.fit()
+    >>> gbest_x, gbest_y = pso.run()
     >>> print('best_x is ', pso.gbest_x, 'best_y is ', pso.gbest_y)
     >>> pso.plot_history()
     """
@@ -146,7 +146,8 @@ class PSO(SkoBase):
         self.record_value['V'].append(self.V)
         self.record_value['Y'].append(self.Y)
 
-    def run(self):
+    def run(self, max_iter=None):
+        self.max_iter = max_iter or self.max_iter
         for iter_num in range(self.max_iter):
             self.update_V()
             self.recorder()
