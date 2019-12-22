@@ -26,10 +26,10 @@ class GeneticAlgorithmBase(SkoBase, metaclass=ABCMeta):
         self.constraint_eq = constraint_eq  # a list of unequal constraint functions with c[i] <= 0
         self.constraint_ueq = constraint_ueq  # a list of equal functions with ceq[i] = 0
 
-        self.Chorm = None
+        self.Chrom = None
         self.X = None  # shape = (size_pop, n_dim)
-        self.Y_raw = None  # shape = (size_pop,) , f(x)
-        self.Y = None  # shape = (size_pop,) , f(x)+penalty
+        self.Y_raw = None  # shape = (size_pop,) , value is f(x)
+        self.Y = None  # shape = (size_pop,) , value is f(x) + penalty for constraint
         self.FitV = None  # shape = (size_pop,)
 
         # self.FitV_history = []
@@ -48,6 +48,7 @@ class GeneticAlgorithmBase(SkoBase, metaclass=ABCMeta):
         if not self.has_constraint:
             self.Y = self.Y_raw
         else:
+            # constraint
             penalty_eq = np.array([np.sum(np.abs([c_i(x) for c_i in self.constraint_eq])) for x in self.X])
             penalty_ueq = np.array([np.sum(np.abs([max(0, c_i(x)) for c_i in self.constraint_ueq])) for x in self.X])
             self.Y = self.Y_raw + 1e5 * penalty_eq + 1e5 * penalty_ueq
@@ -73,7 +74,7 @@ class GeneticAlgorithmBase(SkoBase, metaclass=ABCMeta):
         self.max_iter = max_iter or self.max_iter
         for i in range(self.max_iter):
             self.X = self.chrom2x()
-            self.x2y()
+            self.Y = self.x2y()
             self.ranking()
             self.selection()
             self.crossover()
@@ -143,11 +144,21 @@ class GA(GeneticAlgorithmBase):
         super().__init__(func, n_dim, size_pop, max_iter, prob_mut, constraint_eq, constraint_ueq)
 
         self.lb, self.ub = np.array(lb) * np.ones(self.n_dim), np.array(ub) * np.ones(self.n_dim)
-        self.precision = np.array(precision) * np.ones(self.n_dim)
+        self.precision = np.array(precision) * np.ones(self.n_dim)  # works when precision is int, float, list or array
 
         # Lind is the num of genes of every variable of func（segments）
-        Lind = np.ceil(np.log2((self.ub - self.lb) / self.precision)) + 1
-        self.Lind = Lind.astype(int)
+        Lind_raw = np.log2((self.ub - self.lb) / self.precision + 1)
+        self.Lind = np.ceil(Lind_raw).astype(int)
+
+        int_mode = (self.precision % 1 == 0) & (Lind_raw % 1 != 0)
+        # int_mode is an array of True/False. If True, variable is int constraint and need more code to deal with
+        for i in range(self.n_dim):
+            if int_mode[i]:
+                self.constraint_ueq.append(
+                    lambda x: x[i] - self.ub[i]
+                )
+                self.ub[i] = self.lb[i] + np.exp2(self.Lind[i]) - 1
+
         self.len_chrom = sum(self.Lind)
 
         self.crtbp()

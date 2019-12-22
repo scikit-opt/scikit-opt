@@ -86,17 +86,17 @@ class PSO(SkoBase):
         self.has_constraints = not (lb is None and ub is None)
         self.lb = -np.ones(self.dim) if lb is None else np.array(lb)
         self.ub = np.ones(self.dim) if ub is None else np.array(ub)
-        assert self.dim == len(self.lb) == len(self.ub), 'dim == len(lb) == len(ub) must holds'
-        assert np.all(self.ub > self.lb), 'All upper-bound values must be greater than lower-bound values'
+        assert self.dim == len(self.lb) == len(self.ub), 'dim == len(lb) == len(ub) is not True'
+        assert np.all(self.ub > self.lb), 'upper-bound must be greater than lower-bound'
 
         self.X = np.random.uniform(low=self.lb, high=self.ub, size=(self.pop, self.dim))
         v_high = self.ub - self.lb
         self.V = np.random.uniform(low=-v_high, high=v_high, size=(self.pop, self.dim))  # speed of particles
-        self.Y = self.cal_y()  # image of function corresponding to every particles for one generation
+        self.Y = self.cal_y()  # y = f(x) for all particles
         self.pbest_x = self.X.copy()  # personal best location of every particle in history
         self.pbest_y = self.Y.copy()  # best image of every particle in history
-        self.gbest_x = np.zeros((1, self.dim))  # global best location for all particles in history
-        self.gbest_y = np.inf  # general best image  for all particles in history
+        self.gbest_x = np.zeros((1, self.dim))  # global best location for all particles
+        self.gbest_y = np.inf  # global best y for all particles
         self.gbest_y_hist = []  # gbest_y of every iteration
         self.update_gbest()
 
