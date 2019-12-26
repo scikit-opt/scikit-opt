@@ -89,11 +89,11 @@ class DE(GeneticAlgorithmBase):
 
             # record the best ones
             generation_best_index = self.Y.argmin()
-            self.generation_best_X.append(self.X[generation_best_index, :])
+            self.generation_best_X.append(self.X[generation_best_index, :].copy())
             self.generation_best_Y.append(self.Y[generation_best_index])
             self.all_history_Y.append(self.Y)
 
         global_best_index = np.array(self.generation_best_Y).argmin()
         global_best_X = self.generation_best_X[global_best_index]
-        global_best_Y = self.func(global_best_X)
+        global_best_Y = self.func(np.array([global_best_X]))
         return global_best_X, global_best_Y

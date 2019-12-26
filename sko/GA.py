@@ -44,7 +44,7 @@ class GeneticAlgorithmBase(SkoBase, metaclass=ABCMeta):
         pass
 
     def x2y(self):
-        self.Y_raw = np.array([self.func(x) for x in self.X])
+        self.Y_raw = self.func(self.X)
         if not self.has_constraint:
             self.Y = self.Y_raw
         else:
@@ -89,7 +89,7 @@ class GeneticAlgorithmBase(SkoBase, metaclass=ABCMeta):
 
         global_best_index = np.array(self.generation_best_Y).argmin()
         global_best_X = self.generation_best_X[global_best_index]
-        global_best_Y = self.func(global_best_X)
+        global_best_Y = self.func(np.array([global_best_X]))
         return global_best_X, global_best_Y
 
     fit = run
@@ -257,7 +257,7 @@ class GA_TSP(GeneticAlgorithmBase):
     ranking = ranking.ranking
     selection = selection.selection_tournament_faster
     crossover = crossover.crossover_pmx
-    mutation = mutation.reverse
+    mutation = mutation.mutation_reverse
 
     def run(self, max_iter=None):
         self.max_iter = max_iter or self.max_iter
@@ -280,12 +280,12 @@ class GA_TSP(GeneticAlgorithmBase):
 
             # record the best ones
             generation_best_index = self.FitV.argmax()
-            self.generation_best_X.append(self.X[generation_best_index, :])
+            self.generation_best_X.append(self.X[generation_best_index, :].copy())
             self.generation_best_Y.append(self.Y[generation_best_index])
-            self.all_history_Y.append(self.Y)
-            self.all_history_FitV.append(self.FitV)
+            self.all_history_Y.append(self.Y.copy())
+            self.all_history_FitV.append(self.FitV.copy())
 
         global_best_index = np.array(self.generation_best_Y).argmin()
         global_best_X = self.generation_best_X[global_best_index]
-        global_best_Y = self.func(global_best_X)
+        global_best_Y = self.func(np.array([global_best_X]))
         return global_best_X, global_best_Y
