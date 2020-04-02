@@ -148,6 +148,9 @@ class GA(GeneticAlgorithmBase):
         Lind_raw = np.log2((self.ub - self.lb) / self.precision + 1)
         self.Lind = np.ceil(Lind_raw).astype(int)
 
+        # if precision is integer:
+        # if Lind_raw is integer, which means the number of all possible value is 2**n, no need to modify
+        # if Lind_raw is decimal, modify: make the ub bigger and add a constraint_ueq
         int_mode = (self.precision % 1 == 0) & (Lind_raw % 1 != 0)
         # int_mode is an array of True/False. If True, variable is int constraint and need more code to deal with
         for i in range(self.n_dim):
@@ -155,6 +158,7 @@ class GA(GeneticAlgorithmBase):
                 self.constraint_ueq.append(
                     lambda x: x[i] - self.ub[i]
                 )
+                self.has_constraint = True
                 self.ub[i] = self.lb[i] + np.exp2(self.Lind[i]) - 1
 
         self.len_chrom = sum(self.Lind)
@@ -322,32 +326,3 @@ class GA_TSP(GeneticAlgorithmBase):
         global_best_X = self.generation_best_X[global_best_index]
         global_best_Y = self.func(np.array([global_best_X]))
         return global_best_X, global_best_Y
-
-# %%
-# try:
-#     import torch
-
-# import torch
-# from .operators_gpu import crossover_gpu, mutation_gpu, selection_gpu, ranking_gpu
-#
-#
-# class GA_GPU(GA):
-#
-#     def to(self, device):
-#         self.device = device
-#         self.Chrom = torch.tensor(self.Chrom, device=device, dtype=torch.int8)
-#
-#         def chrom2x(self, Chrom):
-#             '''
-#             We do not intend to make all operators as tensor,
-#             because objective function is probably not for pytorch
-#             '''
-#             Chrom = Chrom.cpu().numpy()
-#             return super().chrom2x(Chrom)
-#
-#         self.register('mutation', mutation_gpu.mutation). \
-#             register('crossover', crossover_gpu.crossover_2point_bit). \
-#             register('selection', selection_gpu.selection_tournament_faster). \
-#             register('chrom2x', chrom2x)
-#
-#         return self
