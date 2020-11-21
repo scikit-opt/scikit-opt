@@ -262,7 +262,7 @@ plt.show()
 ## 3. 粒子群算法
 (PSO, Particle swarm optimization)
 
-### 3.1 带约束的粒子群算法
+### 3.1 粒子群算法
 **第一步**，定义问题  
 -> Demo code: [examples/demo_pso.py#s1](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_pso.py#L1)
 ```python
@@ -277,7 +277,7 @@ def demo_func(x):
 ```python
 from sko.PSO import PSO
 
-pso = PSO(func=demo_func, dim=3, pop=40, max_iter=150, lb=[0, -1, 0.5], ub=[1, 1, 1], w=0.8, c1=0.5, c2=0.5)
+pso = PSO(func=demo_func, n_dim=3, pop=40, max_iter=150, lb=[0, -1, 0.5], ub=[1, 1, 1], w=0.8, c1=0.5, c2=0.5)
 pso.run()
 print('best_x is ', pso.gbest_x, 'best_y is', pso.gbest_y)
 
@@ -289,7 +289,6 @@ import matplotlib.pyplot as plt
 
 plt.plot(pso.gbest_y_hist)
 plt.show()
-
 ```
 
 ![PSO_TPS](https://img1.github.io/heuristic_algorithm/pso.png)
@@ -297,15 +296,21 @@ plt.show()
 ![pso_ani](https://img1.github.io/heuristic_algorithm/pso.gif)  
 ↑**see [examples/demo_pso.py](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_pso_ani.py)**
 
+### 3.2 带非线性约束的粒子群算法
 
-### 3.2 不带约束的粒子群算法
--> Demo code: [examples/demo_pso.py#s4](https://github.com/guofei9987/scikit-opt/blob/master/examples/demo_pso.py#L19)
+### 3.2 PSO with nonlinear constraint
+
+加入你的非线性约束是个圆内的面积 `(x[0] - 1) ** 2 + (x[1] - 0) ** 2 - 0.5 ** 2<=0`  
+这样写代码:
 ```python
-pso = PSO(func=demo_func, dim=3)
-fitness = pso.run()
-print('best_x is ', pso.gbest_x, 'best_y is', pso.gbest_y)
+constraint_ueq = (
+    lambda x: (x[0] - 1) ** 2 + (x[1] - 0) ** 2 - 0.5 ** 2
+    ,
+)
+pso = PSO(func=demo_func, n_dim=2, pop=40, max_iter=max_iter, lb=[-2, -2], ub=[2, 2]
+          , constraint_ueq=constraint_ueq)
 ```
-
+可以有多个非线性约束，向 `constraint_ueq` 加就行了。
 
 ## 4. 模拟退火算法
 (SA, Simulated Annealing)
